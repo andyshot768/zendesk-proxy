@@ -13,30 +13,34 @@ export default async function handler(req, res) {
   const zdUrl = decodeURIComponent(url);
 
   try {
-    const zdRes = await fetch(zdUrl, {
+    const https = await import('https');
+    const urlObj = new URL(zdUrl);
+    
+    const options = {
+      hostname: urlObj.hostname,
+      path: urlObj.pathname + urlObj.search,
+      method: req.method || 'GET',
       headers: {
-        'Authorization': req.headers['authorization'],
+        'Authorization': req.headers['authorization'] || '',
         'Content-Type': 'application/json',
       }
+    };
+
+    const data = await new Promise((resolve, reject) => {
+      const request = https.default.request(options, (response) => {
+        let body = '';
+        response.on('data', chunk => body += chunk);
+        response.on('end', () => {
+          try { resolve({ status: response.statusCode, body: JSON.parse(body) }); }
+          catch(e) { resolve({ status: response.statusCode, body }); }
+        });
+      });
+      request.on('error', reject);
+      request.end();
     });
-    const data = await zdRes.json();
-    return res.status(zdRes.status).json(data);
+
+    return res.status(data.status).json(data.body);
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
 }
-```
-
-4. Clique em **"Commit changes"**
-
----
-
-### Passo 4 — Conecte ao Vercel
-
-1. No **Vercel**, clique em **"Add New Project"**
-2. Selecione o repositório `zendesk-proxy`
-3. Clique em **"Deploy"** — sem mudar nada
-4. Aguarde o deploy (menos de 1 minuto)
-5. Ao finalizar, copie a URL gerada. Será algo como:
-```
-https://zendesk-proxy-seunome.vercel.app
