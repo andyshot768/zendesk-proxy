@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/aggregate.js": {
+      "maxDuration": 300
+    }
+  }
+}
