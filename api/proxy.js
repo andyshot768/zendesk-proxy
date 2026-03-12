@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -13,13 +13,13 @@ export default async function handler(req, res) {
   const zdUrl = decodeURIComponent(url);
 
   try {
-    const https = await import('https');
+    const https = require('https');
     const urlObj = new URL(zdUrl);
-    
+
     const options = {
       hostname: urlObj.hostname,
       path: urlObj.pathname + urlObj.search,
-      method: req.method || 'GET',
+      method: 'GET',
       headers: {
         'Authorization': req.headers['authorization'] || '',
         'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     };
 
     const data = await new Promise((resolve, reject) => {
-      const request = https.default.request(options, (response) => {
+      const request = https.request(options, (response) => {
         let body = '';
         response.on('data', chunk => body += chunk);
         response.on('end', () => {
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     });
 
     return res.status(data.status).json(data.body);
-  } catch (e) {
+  } catch(e) {
     return res.status(500).json({ error: e.message });
   }
-}
+};
